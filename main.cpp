@@ -15,7 +15,7 @@ public:
         if(m < 1 || m > 12){
             throw runtime_error("Month value is invalid: " + to_string(m));
         }
-        if(d < 0 || d > 31){
+        if(d < 1 || d > 31){
             throw runtime_error("Day value is invalid: " + to_string(d));
         }
         year = y;
@@ -45,19 +45,36 @@ ostream& operator<<(ostream& stream, const Date& date){
     return stream;
 }
 istream& operator>>(istream& stream, Date& date){
-    int y, m, d;
+    int y=0, m=0, d=0;
     char first, second;
 
     if(stream){
+        stream.ignore(1);
+        int x = stream.peek();
+        if(x < 48 || x > 57){
+            string res;
+            stream >> res;
+            throw runtime_error("Wrong date format: " + res);
+        }
         stream >> y;
+        if(stream.peek() != '-'){
+            throw runtime_error("Wrong date format: " + to_string(y));
+        }
         stream >> first;
         stream >> m;
+
+        if(stream.peek() != '-'){
+            throw runtime_error("Wrong date format: " + to_string(y) + first + to_string(m));
+        }
         stream >> second;
         if(stream){
             stream >> d;
-            if(first != '-' || second != '-'){
+            char x = stream.peek();
+            if(first != '-' || second != '-' || (x != ' ' && x != '\n')){
+                string external;
+                stream >> external;
                 throw runtime_error("Wrong date format: " + to_string(y) + first
-                                    + to_string(m) + second + to_string(d));
+                                    + to_string(m) + second + to_string(d) + external);
             }
             date = {y, m, d};
         }
@@ -135,6 +152,10 @@ int main() {
             if (command == "Add") {
                 Date d;
                 string event;
+                if(cin.peek() == '\n'){
+                    cout << "Wrong date format: " << endl;
+                    break;
+                }
                 cin >> d;
                 cin >> event;
                 db.AddEvent(d, event);
@@ -165,7 +186,7 @@ int main() {
             }
         }
     } catch (const runtime_error& ex){
-        cout << ex.what();
+        cout << ex.what() << endl;
     }
 
     return 0;
